@@ -1,0 +1,74 @@
+# BTC direction model + Hyperliquid perp bot — single source of truth for all knobs.
+# Every number here is a default you can change; the README explains each block.
+
+data:
+  price_source: coinbase          # coinbase | bitstamp  (historical spot 15m candles; Hyperliquid only serves ~5000 recent bars)
+  start: "2023-12-01"             # fetch start; a few weeks before the 2024-01-11 ETF launch so rolling features are warm
+  data_dir: data
+  bar_minutes: 30                 # model bar size (15m source is resampled to this)
+  etf_flows_csv: data/etf_flows.csv
+  farside_url: "https://farside.co.uk/btc/"
+  etf_flow_publish_lag_hours: 8   # a day's flow print is treated as known at 16:00 ET + this many hours (= 00:00 ET next day)
+
+features:
+  seq_len: 48                     # bars of history the transformer sees (48 x 30m = 24h)
+  horizon_bars: 16                # label = sign of close[t+16 bars] / close[t]  (16 x 30m = 8h)
+  tz: America/New_York
+
+model:
+  d_model: 64
+  n_heads: 4
+  n_layers: 2
+  dropout: 0.2
+  lr: 0.0003
+  weight_decay: 0.01
+  batch_size: 256
+  max_epochs: 40
+  patience: 6
+  label_smoothing: 0.05
+  seed: 42
+  n_ensemble: 3                   # models per fold (different seeds); confidence = agreement of the ensemble
+  min_temperature: 1.0            # calibration may soften confidence (T > 1) but never sharpen it (T < 1)
+  device: auto                    # auto | cpu | mps | cuda
+
+walkforward:
+  train_start: "2024-01-11"       # ETF launch day
+  first_test_start: "2025-01-01"
+  test_months: 3
+  val_fraction: 0.15              # most recent slice of each train window, used for early stopping + temperature calibration
+  model_dir: models
+  report_dir: reports
+
+trading:
+  coin: BTC
+  leverage: 40
+  sizing_mode: risk               # risk  = Kelly on the dollar amount at risk (stop distance), capped at max_risk_per_trade
+                                  # margin = literal "post 2.5% of equity as isolated margin at 40x" every trade
+  kelly_multiplier: 0.25          # fraction of full Kelly (0.25 = quarter Kelly)
+  max_risk_per_trade: 0.025       # the 2.5%: max fraction of equity lost if the stop is hit (risk mode) / posted as margin (margin mode)
+  stop_loss_pct: 0.008            # 0.8% adverse move -> stop. Must stay inside the 40x liquidation distance (~1.23-1.27%)
+  take_profit_pct: 0.016          # 1.6% favourable move -> take profit (2:1 payoff). Set to null to hold to horizon only
+  confidence_threshold: 0.65      # act only when P(up) >= 0.65 or P(down) >= 0.65
+  decision_times_et: ["09:00", "10:00"]   # bar-close times (ET) at which a trade may be opened: 30 min before / after NYSE open
+  max_margin_fraction: 0.5        # never post more than this fraction of equity as isolated margin
+  stop_liq_buffer: 0.8            # stop distance must be <= this fraction of the liquidation distance
+  taker_fee: 0.00045              # Hyperliquid base tier taker fee
+  maker_fee: 0.00015
+  slippage_bps: 1.0
+  min_notional_usd: 10.0
+
+backtest:
+  initial_equity: 1000.0
+  random_baseline_seeds: 200
+  monte_carlo_paths: 2000
+
+live:
+  mode: dry_run                   # dry_run | testnet | mainnet
+  poll_seconds: 20
+  state_file: logs/bot_state.json
+  log_dir: logs
+  daily_loss_limit: 0.10          # pause new trades for the day after losing 10% of start-of-day equity
+  max_consecutive_losses: 4       # pause new trades for 24h after this many losses in a row
+  max_flow_age_days: 5            # skip trading if the newest ETF flow print is older than this
+  etf_refresh_hour_et: 20         # try to refresh ETF flows from Farside once a day after this hour
+  pause_file: logs/PAUSE          # touch this file to stop new entries without killing the process

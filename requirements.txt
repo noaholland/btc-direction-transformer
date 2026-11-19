@@ -1,0 +1,12 @@
+pandas>=2.2
+numpy>=1.26
+torch>=2.3
+scikit-learn>=1.4
+pyyaml>=6.0
+requests>=2.31
+cloudscraper>=1.2
+lxml>=5.0
+matplotlib>=3.8
+pytest>=8.0
+hyperliquid-python-sdk>=0.10
+python-dotenv>=1.0

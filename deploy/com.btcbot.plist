@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  launchd job that keeps the bot running and restarts it if it dies.
+  Replace /path/to/btc-direction-transformer with the absolute path of your checkout, then
+  Install:  cp deploy/com.btcbot.plist ~/Library/LaunchAgents/
+            launchctl load ~/Library/LaunchAgents/com.btcbot.plist
+  Stop:     launchctl unload ~/Library/LaunchAgents/com.btcbot.plist
+  Pause new entries without stopping: touch logs/PAUSE
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.btcbot</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/path/to/btc-direction-transformer/.venv/bin/python</string>
+    <string>-m</string>
+    <string>btcbot</string>
+    <string>bot</string>
+  </array>
+  <key>WorkingDirectory</key><string>/path/to/btc-direction-transformer</string>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+  <key>ThrottleInterval</key><integer>30</integer>
+  <key>StandardOutPath</key><string>/path/to/btc-direction-transformer/logs/launchd.out.log</string>
+  <key>StandardErrorPath</key><string>/path/to/btc-direction-transformer/logs/launchd.err.log</string>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PYTHONUNBUFFERED</key><string>1</string>
+  </dict>
+</dict>
+</plist>

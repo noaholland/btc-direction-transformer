@@ -1,0 +1,7 @@
+# Sensitivity run: same model, 24h horizon (48 x 30m bars) instead of 8h. Outputs go to separate dirs.
+# Run: .venv/bin/python -m btcbot --config config_h24.yaml train && .venv/bin/python -m btcbot --config config_h24.yaml backtest
+features:
+  horizon_bars: 48
+walkforward:
+  model_dir: models/h24
+  report_dir: reports/h24

@@ -1,0 +1,36 @@
+{
+  "period": [
+    "2025-01-01 00:00:00+00:00",
+    "2026-09-06 17:00:00+00:00"
+  ],
+  "config": {
+    "leverage": 40,
+    "sizing_mode": "risk",
+    "kelly_multiplier": 0.25,
+    "max_risk_per_trade": 0.025,
+    "stop_loss_pct": 0.008,
+    "take_profit_pct": 0.016,
+    "confidence_threshold": 0.65,
+    "decision_times_et": [
+      "09:00",
+      "10:00"
+    ]
+  },
+  "risk_mode": {
+    "n_trades": 0,
+    "final_equity": 1000.0,
+    "total_return": 0.0
+  },
+  "margin_mode": {
+    "n_trades": 0,
+    "final_equity": 1000.0,
+    "total_return": 0.0
+  },
+  "buy_and_hold_return": -0.1566811623769261,
+  "random_direction_baseline": {
+    "median_final": 1000.0,
+    "p90_final": 1000.0,
+    "share_beating_model": 1.0
+  },
+  "monte_carlo": {}
+}
